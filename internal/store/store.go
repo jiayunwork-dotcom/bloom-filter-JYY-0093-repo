@@ -245,6 +245,12 @@ func parseRecord(data []byte) (record, int, bool) {
 	if len(data) < total {
 		return record{}, 0, false
 	}
+	// Validate CRC
+	stored := binary.BigEndian.Uint32(data[recHeaderSize+pLen : total])
+	computed := crc32.ChecksumIEEE(data[:recHeaderSize+pLen])
+	if stored != computed {
+		return record{}, 0, false
+	}
 	payload := make([]byte, pLen)
 	copy(payload, data[recHeaderSize:recHeaderSize+pLen])
 	return record{typ: typ, payload: payload}, total, true
